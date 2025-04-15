@@ -8,7 +8,7 @@ export const App = () => {
 	const [count, setCount] = useState(0); // imperative
 
 	// imperative
-	createElement(
+	return createElement(
 		Fragment,
 		null,
 		createElement(
