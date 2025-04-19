@@ -1,98 +1,69 @@
 import { useState } from 'react';
 import styles from './app.module.css';
-
-const isValid = (str) => {
-	return typeof str === 'string' && str.trim().length >= 3;
-};
-
-const getFormattedDateTime = () => {
-	const now = new Date();
-
-	const pad = (n) => n.toString().padStart(2, '0');
-
-	const day = pad(now.getDate());
-	const month = pad(now.getMonth() + 1);
-	const year = now.getFullYear();
-
-	const hours = pad(now.getHours());
-	const minutes = pad(now.getMinutes());
-	const seconds = pad(now.getSeconds());
-
-	return `${day}.${month}.${year} ${hours}:${minutes}:${seconds}`;
-};
+import data from './data.json';
 
 export const App = () => {
-	const [value, setValue] = useState('');
-	const [list, setList] = useState([]);
-	const [error, setError] = useState('');
+	const [steps] = useState(data);
+	const [activeIndex, setActiveIndex] = useState(0);
 
-	const isValueValid = isValid(value);
+	const isFirstStep = activeIndex === 0;
+	const isLastStep = activeIndex === steps.length - 1;
 
-	const onInputButtonClick = () => {
-		const promptValue = prompt('Set value');
+	const handleBack = () => setActiveIndex((prev) => prev - 1);
+	const handleForward = () => setActiveIndex((prev) => prev + 1);
+	const handleRestart = () => setActiveIndex(0);
+	const handleSelectStep = (index) => setActiveIndex(index);
 
-		if (!isValid(promptValue)) {
-			setValue(promptValue);
-			setError('Введенное значение должно содержать минимум 3 символа');
-			return;
-		}
-
-		error.length > 0 && setError('');
-		setValue(promptValue);
+	const getClassName = (index) => {
+		if (index === activeIndex) return styles.active;
+		if (index < activeIndex) return styles.done;
+		return ''; // index > activeIndex
 	};
-
-	const onAddButtonClick = () => {
-		setValue('');
-		const formattedDate = getFormattedDateTime();
-		const updatedList = [
-			...list,
-			{
-				id: ++list.length,
-				value: value,
-				createdAt: formattedDate,
-			},
-		];
-		setList(updatedList);
-	};
-
 	return (
-		<div className={styles.app}>
-			<h1 className={styles.pageHeading}>Ввод значения</h1>
-			<p className={styles.noMarginText}>
-				Текущее значение <code>value</code>: {'"'}
-				<output className={styles.currentValue}>{value}</output>
-				{'"'}
-			</p>
-			{error !== '' && <div className={styles.error}>{error}</div>}
-			<div className={styles.buttonsContainer}>
-				<button className={styles.button} onClick={onInputButtonClick}>
-					Ввести новое
-				</button>
-				<button
-					className={styles.button}
-					disabled={!isValueValid}
-					onClick={onAddButtonClick}
-				>
-					Добавить в список
-				</button>
-			</div>
-			<div className={styles.listContainer}>
-				<h2 className={styles.listHeading}>Список:</h2>
+		<div className={styles.container}>
+			<div className={styles.card}>
+				<h1>Инструкция по готовке пельменей</h1>
 
-				{list.length === 0 ? (
-					<p className={styles.noMarginText}>Нет добавленных элементов</p>
-				) : (
-					<ul className={styles.list}>
-						{list.map(({ id, value, createdAt }) => {
-							console.log('createdAt', createdAt);
+				<div className={styles.steps}>
+					<div className={styles['steps-content']}>
+						{steps[activeIndex].content}
+					</div>
+
+					<ul className={styles['steps-list']}>
+						{steps.map((step, index) => {
+							const className = `${styles['steps-item']} ${getClassName(index)}`;
+
 							return (
-								<li key={id} className={styles.listItem}>
-									{value}
+								<li key={step.id} className={className}>
+									<button
+										className={styles['steps-item-button']}
+										onClick={() => handleSelectStep(index)}
+									>
+										{index + 1}
+									</button>
+									{step.title}
 								</li>
 							);
 						})}
 					</ul>
-				)}
+
+					<div className={styles['buttons-container']}>
+						<button
+							className={styles.button}
+							onClick={handleBack}
+							disabled={isFirstStep}
+						>
+							Назад
+						</button>
+
+						<button
+							className={styles.button}
+							onClick={isLastStep ? handleRestart : handleForward}
+						>
+							{isLastStep ? 'Начать сначала' : 'Далее'}
+						</button>
+					</div>
+				</div>
 			</div>
 		</div>
 	);
